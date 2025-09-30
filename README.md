@@ -5,5 +5,7 @@ The project was carried out within the framework of the subject Data Driven Engi
 
 In the data_loader file.py contains a script that displays the first 10 lines of your data📑
 <img width="1894" height="1030" alt="image" src="https://github.com/user-attachments/assets/c054d821-43a4-4d8d-81d1-aa8f7d20e6a5" />
-![Uploading image.png…]()
+<img width="1833" height="1000" alt="image" src="https://github.com/user-attachments/assets/65953f1d-fb00-41fd-95da-da516e45f6e8" />
 
+Приведение типов для моих данных 
+![Uploading image.png…]()
