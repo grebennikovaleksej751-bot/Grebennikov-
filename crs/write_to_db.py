@@ -4,7 +4,7 @@ import sqlite3
 from sqlalchemy import create_engine, Text, Integer, Float
 
 def get_connection_settings(db_file="creds.db"):
-    """Получаем настройки для подключения к базе"""
+    #Получаем настройки для подключения к базе
     try:
         with sqlite3.connect(db_file) as conn:
             settings_data = pd.read_sql_query("SELECT url, port, user, pass FROM access LIMIT 1", conn)
@@ -14,7 +14,7 @@ def get_connection_settings(db_file="creds.db"):
         return None
 
 def load_data():
-    """Загружаем данные из CSV файла"""
+    #Загружаем данные из CSV файла
     try:
         print("Загрузка данных из CSV...")
         df = pd.read_csv("dataset.csv", sep=';', encoding='utf-8-sig')
@@ -25,7 +25,7 @@ def load_data():
         return None
 
 def convert_data_types(df):
-    """Приведение типов данных"""
+    #Приведение типов данных
     print("Приведение типов данных...")
     
     df_clean = df.copy()
@@ -58,7 +58,7 @@ def convert_data_types(df):
     return df_clean
 
 def upload_to_database(dataframe, credentials, table_name):
-    """Загружаем данные в PostgreSQL"""
+   #Загружаем данные в PostgreSQL
     try:
         # Создаем подключение
         conn_string = f"postgresql://{credentials['user']}:{credentials['pass']}@{credentials['url']}:{credentials['port']}/homeworks"
@@ -108,7 +108,7 @@ def upload_to_database(dataframe, credentials, table_name):
         return None, 0
 
 def self_check(engine, table_name, expected_rows):
-    """Простая самопроверка"""
+    #самопроверка
     print("\n" + "="*50)
     print("САМОПРОВЕРКА")
     print("="*50)
