@@ -1,19 +1,32 @@
 import os
 import pandas as pd
-import sqlite3
 from sqlalchemy import create_engine, inspect
+from dotenv import load_dotenv
 
-# Подключение к creds.db 
-def load_pg_creds(sqlite_path="creds.db"):
+# Загрузка переменных окружения из .env файла
+def load_pg_creds(env_file=".env"):
     try:
-        with sqlite3.connect(sqlite_path) as conn:
-            creds = pd.read_sql_query("SELECT url, port, user, pass FROM access LIMIT 1;", conn)
-        return creds.iloc[0].to_dict()
+        load_dotenv(env_file)
+        
+        creds = {
+            'url': os.getenv('POSTGRES_URL'),
+            'port': os.getenv('POSTGRES_PORT'),
+            'user': os.getenv('POSTGRES_USER'),
+            'pass': os.getenv('POSTGRES_PASSWORD')
+        }
+        
+        # Проверяем, что все  загружено
+        for key, value in creds.items():
+            if value is None:
+                print(f"Предупреждение: переменная {key} не найдена в .env файле")
+        
+        print("Учетные данные загружены из .env файла")
+        return creds
     except Exception as e:
-        print(f"Ошибка при чтении creds.db: {e}")
+        print(f"Ошибка при чтении .env файла: {e}")
         return None
 
-# Загрузка и подготовка данных с приведением типов (только первые 100 строк)
+# Загрузка и подготовка данных с приведением типов 
 def prepare_dataset(file_path="dataset.csv", max_rows=100):
     try:
         
@@ -135,11 +148,11 @@ if __name__ == "__main__":
     print("ЗАГРУЗКА ДАННЫХ В POSTGRESQL (первые 100 строк)")
     print("=" * 50)
     
-    # Чтение учётных данных
-    print("Чтение учётных данных из creds.db")
+    # Чтение учётных данных из .env
+    print("Чтение учётных данных из .env файла")
     credentials = load_pg_creds()
     if credentials is None:
-        print("Не удалось загрузить учетные данные. Проверьте файл creds.db")
+        print("Не удалось загрузить учетные данные. Проверьте файл .env")
         exit(1)
     
     # Подготовка датасета (только первые 100 строк)
