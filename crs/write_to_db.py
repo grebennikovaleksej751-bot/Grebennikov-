@@ -1,51 +1,57 @@
 import os
 import pandas as pd
 import sqlite3
-from sqlalchemy import create_engine, Text, Integer, Float
+from sqlalchemy import create_engine, inspect
 
-def get_connection_settings(db_file="creds.db"):
-    #Получаем настройки для подключения к базе
+# Подключение к creds.db 
+def load_pg_creds(sqlite_path="creds.db"):
     try:
-        with sqlite3.connect(db_file) as conn:
-            settings_data = pd.read_sql_query("SELECT url, port, user, pass FROM access LIMIT 1", conn)
-            return settings_data.iloc[0].to_dict()
+        with sqlite3.connect(sqlite_path) as conn:
+            creds = pd.read_sql_query("SELECT url, port, user, pass FROM access LIMIT 1;", conn)
+        return creds.iloc[0].to_dict()
     except Exception as e:
-        print(f"Ошибка при чтении {db_file}: {e}")
+        print(f"Ошибка при чтении creds.db: {e}")
         return None
 
-def load_data():
-    #Загружаем данные из CSV файла
+# Загрузка и подготовка данных с приведением типов (только первые 100 строк)
+def prepare_dataset(file_path="dataset.csv", max_rows=100):
     try:
-        print("Загрузка данных из CSV...")
-        df = pd.read_csv("dataset.csv", sep=';', encoding='utf-8-sig')
-        print(f"Загружено {len(df)} строк")
-        return df.head(100)  # Берем только 100 строк
+        
+        df = pd.read_csv(file_path, sep=';', nrows=max_rows)
+            
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        
+        df = convert_data_types(df)
+        
+        print(f"Загружено {len(df)} строк с колонками: {list(df.columns)}")
+        return df
     except Exception as e:
-        print(f"Ошибка при загрузке CSV: {e}")
+        print(f"Ошибка при загрузке dataset.csv: {e}")
         return None
+    
 
 def convert_data_types(df):
-    #Приведение типов данных
+    """Приведение типов данных"""
     print("Приведение типов данных...")
     
     df_clean = df.copy()
     
     # Числовые колонки
-    if 'Number' in df_clean.columns:
-        df_clean['Number'] = pd.to_numeric(df_clean['Number'], errors='coerce').fillna(0).astype('int64')
+    if 'number' in df_clean.columns:
+        df_clean['number'] = pd.to_numeric(df_clean['number'], errors='coerce').fillna(0).astype('int64')
     
-    if 'ID' in df_clean.columns:
-        df_clean['ID'] = pd.to_numeric(df_clean['ID'], errors='coerce').fillna(0).astype('int64')
+    if 'id' in df_clean.columns:
+        df_clean['id'] = pd.to_numeric(df_clean['id'], errors='coerce').fillna(0).astype('int64')
     
-    if 'Number of atoms' in df_clean.columns:
-        df_clean['Number of atoms'] = pd.to_numeric(df_clean['Number of atoms'], errors='coerce').fillna(0).astype('int64')
+    if 'number_of_atoms' in df_clean.columns:
+        df_clean['number_of_atoms'] = pd.to_numeric(df_clean['number_of_atoms'], errors='coerce').fillna(0).astype('int64')
     
-    if 'G3' in df_clean.columns:
-        df_clean['G3'] = pd.to_numeric(df_clean['G3'].astype(str).str.replace(',', '.'), errors='coerce').astype('float64')
+    if 'g3' in df_clean.columns:
+        df_clean['g3'] = pd.to_numeric(df_clean['g3'].astype(str).str.replace(',', '.'), errors='coerce').astype('float64')
     
     # Текстовые колонки
-    text_columns = ['Chemical compound', 'Name of compound', 'Authors', 
-                   'Literature', 'Symmetry', 'Type', 'Topology']
+    text_columns = ['chemical_compound', 'name_of_compound', 'authors', 
+                   'literature', 'symmetry', 'type', 'topology']
     
     for col in text_columns:
         if col in df_clean.columns:
@@ -57,136 +63,108 @@ def convert_data_types(df):
     
     return df_clean
 
-def upload_to_database(dataframe, credentials, table_name):
-   #Загружаем данные в PostgreSQL
+# Запись в PostgreSQL 
+def upload_to_postgres(df, creds, table_name="grebennikov"):
     try:
-        # Создаем подключение
-        conn_string = f"postgresql://{credentials['user']}:{credentials['pass']}@{credentials['url']}:{credentials['port']}/homeworks"
-        engine = create_engine(conn_string)
+        # Подключение к homeworks
+        conn_str = f"postgresql+psycopg2://{creds['user']}:{creds['pass']}@{creds['url']}:{creds['port']}/homeworks"
+        print(f"Подключаемся к: {creds['url']}:{creds['port']}/homeworks")
         
-        # Очищаем названия колонок
-        clean_columns = []
-        for column in dataframe.columns:
-            clean_column = (column.strip()
-                          .lower()
-                          .replace(' ', '_')
-                          .replace('-', '_')
-                          .replace('.', '_')
-                          .replace('(', '')
-                          .replace(')', ''))
-            clean_columns.append(clean_column)
-        
-        dataframe.columns = clean_columns
-        
-        # Определяем SQL типы
-        sql_dtypes = {}
-        for col in dataframe.columns:
-            if dataframe[col].dtype in ['int64', 'Int64']:
-                sql_dtypes[col] = Integer
-            elif dataframe[col].dtype == 'float64':
-                sql_dtypes[col] = Float
-            else:
-                sql_dtypes[col] = Text
-        
-        # Загружаем данные
-        rows_count = dataframe.shape[0]
-        print(f"Загружаем {rows_count} строк в базу...")
-        
-        dataframe.to_sql(
-            name=table_name, 
-            con=engine, 
-            if_exists='replace', 
-            index=False,
-            dtype=sql_dtypes
-        )
-        
-        print(f"Данные записаны в таблицу {table_name}")
-        return engine, rows_count
-        
-    except Exception as e:
-        print(f"Ошибка при загрузке в базу: {e}")
-        return None, 0
+        engine = create_engine(conn_str, pool_recycle=3600, connect_args={'connect_timeout': 10})
 
-def self_check(engine, table_name, expected_rows):
-    #самопроверка
-    print("\n" + "="*50)
-    print("САМОПРОВЕРКА")
-    print("="*50)
+        # Проверяем соединение
+        with engine.connect() as test_conn:
+            print("Соединение с homeworks установлено успешно!")
+
+        # Запись данных
+        with engine.begin() as conn:
+            df.to_sql(
+                name=table_name,
+                con=conn,
+                schema="public",
+                if_exists="replace",
+                index=False,
+                method='multi'
+            )
+
+        # Проверка наличия таблицы
+        inspector = inspect(engine)
+        tables = inspector.get_table_names(schema="public")
+        if table_name in tables:
+            print(f"Таблица '{table_name}' успешно создана в схеме public!")
+            
+            # информация о структуре таблицы
+            columns_info = inspector.get_columns(table_name, schema="public")
+            print(f"\nСтруктура таблицы {table_name}:")
+            for col in columns_info:
+                print(f"  {col['name']}: {col['type']}")
+                
+            return engine
+        else:
+            print(f"Таблица '{table_name}' не найдена. Текущие таблицы: {tables}")
+            return None
+
+    except Exception as e:
+        print(f"Ошибка при загрузке в PostgreSQL: {e}")
+        return None
+
+# Проверка результата 
+def verify_upload(engine, table_name="grebennikov"):
     
     try:
-        # Проверяем количество строк
-        result = pd.read_sql(f"SELECT COUNT(*) as row_count FROM {table_name}", engine)
-        actual_rows = result['row_count'].iloc[0]
+        # общее количество строк
+        count_query = f"SELECT COUNT(*) as total_rows FROM public.{table_name}"
+        count_result = pd.read_sql(count_query, con=engine)
+        total_rows = count_result.iloc[0]['total_rows']
         
-        print(f"Ожидаемое количество строк: {expected_rows}")
-        print(f"Фактическое количество строк: {actual_rows}")
+        print(f"\nВсего загружено строк: {total_rows}")
         
-        if actual_rows == expected_rows:
-            print("Количество строк совпадает!")
-        else:
-            print("Ошибка: количество строк не совпадает!")
-            return False
-        
-        # Показываем структуру таблицы
-        table_info = pd.read_sql(f"""
-            SELECT column_name, data_type 
-            FROM information_schema.columns 
-            WHERE table_name = '{table_name}'
-        """, engine)
-        
-        print(f"\nСтруктура таблицы:")
-        print(table_info)
-        
-        # Показываем первые 3 строки
-        sample_data = pd.read_sql(f"SELECT * FROM {table_name} LIMIT 3", engine)
-        print(f"\nПервые 3 строки таблицы:")
-        print(sample_data)
+        # Показываем первые 5 строк
+        query = f"SELECT * FROM public.{table_name} LIMIT 5"
+        sample = pd.read_sql(query, con=engine)
+        print("\nПервые 5 строк загруженных данных:")
+        print(sample.to_string(index=False))
         
         return True
-        
     except Exception as e:
-        print(f" Ошибка при самопроверке: {e}")
+        print(f"Ошибка при проверке данных: {e}")
         return False
 
-def main():
+# Основная программа
+if __name__ == "__main__":
+    print("ЗАГРУЗКА ДАННЫХ В POSTGRESQL (первые 100 строк)")
     print("=" * 50)
-    print("ЗАГРУЗКА ДАННЫХ В БАЗУ")
-    print("=" * 50)
     
-    # Получаем настройки подключения
-    db_settings = get_connection_settings()
-    if not db_settings:
-        print("Не удалось получить настройки подключения!")
-        return
+    # Чтение учётных данных
+    print("Чтение учётных данных из creds.db")
+    credentials = load_pg_creds()
+    if credentials is None:
+        print("Не удалось загрузить учетные данные. Проверьте файл creds.db")
+        exit(1)
     
-    # Загружаем данные
-    data = load_data()
-    if data is None or data.empty:
-        print("Не удалось загрузить данные!")
-        return
+    # Подготовка датасета (только первые 100 строк)
+    print("Подготовка датасета (первые 100 строк)")
+    data = prepare_dataset("dataset.csv", max_rows=100)
+    if data is None:
+        print("Не удалось загрузить данные из dataset.csv")
+        exit(1)
     
-    # Приводим типы
-    data = convert_data_types(data)
+    print(f"Размер датасета: {data.shape[0]} строк, {data.shape[1]} колонок")
     
-    # Загружаем в базу
-    engine, expected_rows = upload_to_database(data, db_settings, "grebennikov")
-    
-    if engine:
-        # Выполняем самопроверку
-        if self_check(engine, "grebennikov", expected_rows):
-            print("\n" + "=" * 50)
-            print("ЗАГРУЗКА УСПЕШНО ЗАВЕРШЕНА!")
-            print("=" * 50)
-        else:
-            print("\n" + "=" * 50)
-            print("ОШИБКА ПРИ ЗАГРУЗКЕ!")
-            print("=" * 50)
-    else:
+    # Загрузка в PostgreSQL
+    print("\nЗагрузка в PostgreSQL (homeworks)")
+    engine = upload_to_postgres(data, credentials, table_name="grebennikov")
+    if engine is None:
         print("Не удалось загрузить данные в базу")
-
-if __name__ == "__main__":
-    main()
-
-# Запускаем программу
-if __name__ == "__main__":
-    main()
+        exit(1)
+    
+    # Проверка результата
+    print("\nПроверка результата")
+    success = verify_upload(engine, "grebennikov")
+    
+    if success:
+        print("\n" + "="*50)
+        print("ЗАГРУЗКА УСПЕШНО ЗАВЕРШЕНА!")
+        print(f"Первые 100 строк загружены в таблицу 'grebennikov' базы данных 'homeworks'")
+    else:
+        print("\nЗАГРУЗКА ЗАВЕРШЕНА С ПРЕДУПРЕЖДЕНИЯМИ")
