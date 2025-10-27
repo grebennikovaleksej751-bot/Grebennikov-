@@ -9,3 +9,5 @@ In the data_loader file.py contains a script that displays the first 10 lines of
 
 Приведение типов для моих данных 
 ![Uploading image.png…]()
+
+[Ссылка для просмотра EDA анализа](https://nbviewer.org/github/username/repo/blob/main/notebooks/EDA.ipynb)
