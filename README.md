@@ -10,4 +10,4 @@ In the data_loader file.py contains a script that displays the first 10 lines of
 Приведение типов для моих данных 
 ![Uploading image.png…]()
 
-[Ссылка для просмотра EDA анализа](https://nbviewer.org/github/username/repo/blob/main/notebooks/EDA_1.ipynb)
+[Ссылка для просмотра EDA анализа](https://nbviewer.org/github/grebennikovaleksej751-bot/Grebennikov-/blob/main/notebook/EDA_1.ipynb)
