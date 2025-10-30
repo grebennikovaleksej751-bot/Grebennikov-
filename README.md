@@ -78,5 +78,5 @@ python etl/main.py --max-rows 100 --output both --table-name grebennikov
 
 Файл в формате CSV с разделителем ";" и кодировкой UTF-8. Для работы с данными рекомендуется использовать специализированное программное обеспечение для кристаллографического анализа или стандартные инструменты анализа данных (Python/R с соответствующими библиотеками).
 
-
-[Ссылка для просмотра EDA анализа](https://nbviewer.org/github/grebennikovaleksej751-bot/Grebennikov-/blob/main/notebook/EDA_1.ipynb)
+### Анализ данных
+[EDA анализ](https://nbviewer.org/github/grebennikovaleksej751-bot/Grebennikov-/blob/main/notebook/EDA_1.ipynb)
