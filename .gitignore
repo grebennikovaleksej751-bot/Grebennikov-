@@ -1,0 +1,73 @@
+# Data directories - ВСЕ данные исключаем из Git
+data/
+*.csv
+*.parquet
+
+# Database files - файлы баз данных
+creds.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Tt]humbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Jupyter notebooks (если будут использоваться)
+.ipynb_checkpoints/
+
+# Configuration files with secrets (если будут)
+config.ini
+secrets.json
+credentials.json
