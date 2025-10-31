@@ -22,7 +22,7 @@ Grebennikov/
 │   ├── load.py         # Загрузка в базу данных и сохранение в parquet
 │   ├── validate.py     # Валидация данных
 │   └── main.py         # CLI интерфейс
-├── notebook/
+└── notebook/
      └── EDA.ipynb       # Анализ данных
 ```
 ## 💻Установка и использование
