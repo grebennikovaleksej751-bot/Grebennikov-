@@ -23,7 +23,7 @@ Grebennikov/
 │   ├── validate.py     # Валидация данных
 │   └── main.py         # CLI интерфейс
 ├── notebook/
-    ├── EDA.ipynb       # Анализ данных
+     └── EDA.ipynb       # Анализ данных
 ```
 ## 💻Установка и использование
 
