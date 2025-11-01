@@ -9,7 +9,7 @@ def get_connection_settings(db_file="creds.db"):
     """Получение настроек подключения к базе данных"""
     
     try:
-        # Открываем базу с настройками и берем данные из access
+        # Открываем базу с настройками и берем данные 
         conn = sqlite3.connect(db_file)
         settings_data = pd.read_sql_query("SELECT url, port, user, pass FROM access LIMIT 1", conn)
         conn.close()
@@ -24,20 +24,20 @@ def upload_to_database(dataframe, credentials, db_name, table_name):
     """Загрузка данных в PostgreSQL"""
     
     try:
-        # Кодируем пароль для безопасного подключения
+        
         encoded_password = urllib.parse.quote_plus(credentials['pass'])
         
-        # Создаем строку подключения с явным указанием кодировки
+        # Создаем строку с указанием кодировки
         conn_string = f"postgresql://{credentials['user']}:{encoded_password}@{credentials['url']}:{credentials['port']}/{db_name}?client_encoding=utf8"
         
-        # Создаем engine с настройками кодировки
+        # Создаем engine 
         engine = create_engine(
             conn_string,
             connect_args={'options': '-c client_encoding=utf8'},
             echo=False
         )
         
-        # Проверка подключения
+        # Проверяем подключение
         test_connection = engine.connect()
         test_connection.close()
         print(f"Успешно подключились к базе {db_name}")
@@ -47,7 +47,7 @@ def upload_to_database(dataframe, credentials, db_name, table_name):
             if dataframe[col].dtype == 'object':
                 dataframe[col] = dataframe[col].astype(str).str.encode('utf-8', 'ignore').str.decode('utf-8')
         
-        # Загружаем данные в таблицу
+        # Загрузка данных
         dataframe.to_sql(
             name=table_name,
             con=engine,
@@ -107,7 +107,7 @@ def show_table_data(engine, table_name, rows_to_show=5):
         print(f"\nПервые {rows_to_show} строк из таблицы {table_name}:")
         print(result)
         
-        # Показываем информацию о таблице
+        # Показываем информацию
         table_info = pd.read_sql(f"""
             SELECT column_name, data_type 
             FROM information_schema.columns 
