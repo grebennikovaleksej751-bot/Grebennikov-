@@ -2,7 +2,7 @@ import pandas as pd
 
 def convert_data_types(dataframe):
     """
-    Приведение типов данных для датасета химических соединений
+    Приведение типов данных 
     """
     df = dataframe.copy()
     
@@ -25,7 +25,7 @@ def convert_data_types(dataframe):
                 df[col] = df[col].astype(str).str.replace(',', '.')
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    # Обработка колонки G3 (вероятно, дробные числа)
+    # Обработка колонки G3 
     if 'G3' in df.columns:
         print("Обработка колонки G3...")
         # Убеждаемся, что это float
@@ -40,7 +40,7 @@ def convert_data_types(dataframe):
             # Преобразуем в строку и заменяем NaN на пустые строки
             df[col] = df[col].astype(str).replace('nan', '').replace('None', '')
     
-    # Проверяем результаты преобразования
+    # Проверяем результаты 
     print("\nТипы данных после преобразования:")
     for col, dtype in df.dtypes.items():
         print(f"  {col}: {dtype}")
