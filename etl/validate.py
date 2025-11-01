@@ -16,15 +16,14 @@ def validate_raw_data(df: pd.DataFrame) -> bool:
     
     validation_passed = True
     
-    # Check 1: Dataframe is not empty
+    
     if df.empty:
         print("✗ Validation failed: DataFrame is empty")
         return False
     
     print(f"✓ Data size: {df.shape[0]} rows, {df.shape[1]} columns")
     
-    # Check 2: Required columns exist
-    required_columns = ['G3']  # Add other required columns as needed
+    required_columns = ['G3']  
     missing_columns = [col for col in required_columns if col not in df.columns]
     
     if missing_columns:
@@ -33,12 +32,11 @@ def validate_raw_data(df: pd.DataFrame) -> bool:
     else:
         print("✓ All required columns present")
     
-    # Check 3: No completely empty columns
     empty_columns = df.columns[df.isnull().all()].tolist()
     if empty_columns:
-        print(f"⚠ Warning: Completely empty columns: {empty_columns}")
+        print(f" Warning: Completely empty columns: {empty_columns}")
     
-    # Check 4: Basic data quality for critical columns
+    
     critical_columns = ['G3']
     for col in critical_columns:
         if col in df.columns:
@@ -50,7 +48,7 @@ def validate_raw_data(df: pd.DataFrame) -> bool:
             # Check data type (basic check)
             print(f"✓ Column '{col}': {df[col].dtype}")
     
-    # Check 5: Duplicate rows
+    # проверка повторяющихся строк
     duplicate_count = df.duplicated().sum()
     if duplicate_count > 0:
         print(f"⚠ Warning: Found {duplicate_count} duplicate rows")
@@ -72,7 +70,7 @@ def validate_loaded_data(df: pd.DataFrame) -> bool:
     
     validation_passed = True
     
-    # Check 1: Data types are correct
+    # правильность типов данных
     if 'g3' in df.columns:
         if not pd.api.types.is_float_dtype(df['g3']):
             print("✗ Validation failed: Column 'g3' should be float")
@@ -80,7 +78,7 @@ def validate_loaded_data(df: pd.DataFrame) -> bool:
         else:
             print("✓ Column 'g3' is float type")
     
-    # Check 2: No extreme outliers in numerical columns
+    
     numerical_columns = df.select_dtypes(include=['number']).columns
     
     for col in numerical_columns:
@@ -90,11 +88,11 @@ def validate_loaded_data(df: pd.DataFrame) -> bool:
             if inf_count > 0:
                 print(f"⚠ Warning: Column '{col}' has {inf_count} infinite values")
             
-            # Basic statistics
+            
             if df[col].notna().any():
                 print(f"✓ Column '{col}': min={df[col].min():.2f}, max={df[col].max():.2f}, mean={df[col].mean():.2f}")
     
-    # Check 3: Text columns don't have excessive whitespace
+    # проверка пробелов
     text_columns = df.select_dtypes(include=['object']).columns
     for col in text_columns:
         if col in df.columns:
@@ -103,7 +101,7 @@ def validate_loaded_data(df: pd.DataFrame) -> bool:
             if whitespace_only > 0:
                 print(f"⚠ Warning: Column '{col}' has {whitespace_only} empty/whitespace-only values")
     
-    # Check 4: No completely null rows
+    # Проверка на пустые строки
     completely_null_rows = df.isnull().all(axis=1).sum()
     if completely_null_rows > 0:
         print(f"⚠ Warning: Found {completely_null_rows} completely null rows")
@@ -127,7 +125,7 @@ def validate_database_data(
         Validation success status
     """
     try:
-        # Check if table exists and has data
+        
         count_query = f"SELECT COUNT(*) as row_count FROM public.{table_name}"
         count_result = pd.read_sql(count_query, con=engine)
         row_count = count_result.iloc[0]['row_count']
