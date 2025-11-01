@@ -27,7 +27,7 @@ def run_etl_pipeline(max_rows=100, output_format='both', table_name='grebennikov
     print("=" * 50)
     
     try:
-        # EXTRACT
+        # Extract
         print("\n1. EXTRACT - Загрузка данных")
         print("-" * 30)
         
@@ -35,7 +35,7 @@ def run_etl_pipeline(max_rows=100, output_format='both', table_name='grebennikov
         raw_data = load_raw_data(csv_path)
         validate_raw_data(raw_data)
         
-        # TRANSFORM
+        # Transform
         print("\n2. TRANSFORM - Преобразование данных")
         print("-" * 30)
         
@@ -48,12 +48,12 @@ def run_etl_pipeline(max_rows=100, output_format='both', table_name='grebennikov
         for col, dtype in final_data.dtypes.items():
             print(f"  {col}: {dtype}")
         
-        # Валидация после трансформации
+        # Валидация 
         validate_dataframe_structure(final_data)
         validate_numeric_columns(final_data)
         check_data_quality(final_data)
         
-        # LOAD
+        # load
         print("\n3. LOAD - Выгрузка данных")
         print("-" * 30)
         
